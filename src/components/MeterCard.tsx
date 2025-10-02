@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { 
   MapPin, 
   AlertTriangle, 
@@ -35,9 +36,10 @@ interface MeterReading {
 
 interface MeterCardProps {
   meter: MeterReading;
+  onMarkIssue?: () => void;
 }
 
-export function MeterCard({ meter }: MeterCardProps) {
+export function MeterCard({ meter, onMarkIssue }: MeterCardProps) {
   const getStatusColor = () => {
     switch (meter.status) {
       case "complete":
@@ -230,6 +232,19 @@ export function MeterCard({ meter }: MeterCardProps) {
             <p className="text-2xl font-bold text-success">
               {meter.currentReading.toLocaleString()}
             </p>
+          </div>
+        )}
+
+        {meter.status !== "complete" && onMarkIssue && (
+          <div className="pt-3 border-t border-border mt-3">
+            <Button
+              variant="outline"
+              onClick={onMarkIssue}
+              className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            >
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Mark Issue
+            </Button>
           </div>
         )}
       </div>

@@ -224,19 +224,10 @@ export function MeterReaderApp() {
       <main className="px-4 py-4 pb-24">
         {currentMeter && (
           <>
-            <MeterCard meter={currentMeter} />
-
-            {/* Mark Issue Section */}
-            {currentMeter.status !== "complete" && (
-              <Button
-                variant="outline"
-                onClick={() => setIssueReportOpen(true)}
-                className="w-full mt-4 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-              >
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                Mark Issue
-              </Button>
-            )}
+            <MeterCard 
+              meter={currentMeter} 
+              onMarkIssue={() => setIssueReportOpen(true)}
+            />
 
             {/* Reading Input Section */}
             <Card className="p-4 mt-4 shadow-soft">
