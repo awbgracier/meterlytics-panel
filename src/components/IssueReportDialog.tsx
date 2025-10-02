@@ -211,7 +211,7 @@ export function IssueReportDialog({ open, onOpenChange, onSubmit }: IssueReportD
                     <Button
                       key={category.id}
                       variant="outline"
-                      className="h-24 flex flex-col items-center justify-center gap-2 hover:bg-primary/10 hover:border-primary hover:text-primary transition-all"
+                      className="h-24 flex flex-col items-center justify-center gap-2 bg-card text-foreground border-2 hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all shadow-sm"
                       onClick={() => handleCategorySelect(category)}
                     >
                       <Icon className="h-6 w-6" />
@@ -229,7 +229,7 @@ export function IssueReportDialog({ open, onOpenChange, onSubmit }: IssueReportD
                 <Button
                   key={issue.id}
                   variant="outline"
-                  className="w-full h-auto p-4 flex items-start justify-between hover:bg-primary/5 hover:border-primary transition-all"
+                  className="w-full h-auto p-4 flex items-start justify-between bg-card text-foreground border-2 hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all shadow-sm"
                   onClick={() => handleIssueSelect(issue)}
                 >
                   <span className="text-left text-sm font-medium flex-1">
@@ -248,7 +248,7 @@ export function IssueReportDialog({ open, onOpenChange, onSubmit }: IssueReportD
                       </Badge>
                     )}
                     {issue.photoOptional && (
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-1">
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-1 bg-background">
                         <Camera className="h-2.5 w-2.5" />
                         Optional
                       </Badge>
