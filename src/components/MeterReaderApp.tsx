@@ -100,6 +100,20 @@ const mockMeters: MeterReading[] = [
   },
 ];
 
+interface AuditLogEntry {
+  id: string;
+  meterNumber: string;
+  customerName: string;
+  reading: number;
+  date: string;
+  time: string;
+  timestamp: string;
+  reader: string;
+  latitude: number | null;
+  longitude: number | null;
+  accuracy?: number;
+}
+
 export function MeterReaderApp() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [meters, setMeters] = useState<MeterReading[]>(mockMeters);
@@ -107,6 +121,7 @@ export function MeterReaderApp() {
   const [issueReportOpen, setIssueReportOpen] = useState(false);
   const [readingValue, setReadingValue] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
 
   // Update time every minute
   useState(() => {
@@ -198,6 +213,22 @@ export function MeterReaderApp() {
           console.log('📊 READING SUBMISSION DATA:', submissionData);
           console.log('🌐 Would send to Odoo API:', JSON.stringify(submissionData, null, 2));
 
+          // Add to audit log
+          const auditEntry: AuditLogEntry = {
+            id: `log-${Date.now()}`,
+            meterNumber: currentMeter.meterNumber,
+            customerName: currentMeter.customerName,
+            reading: parseInt(readingValue),
+            date: submissionData.date,
+            time: submissionData.time,
+            timestamp: submissionData.timestamp,
+            reader: readerInfo.name,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+          };
+          setAuditLog(prev => [auditEntry, ...prev]);
+
           // Update meter status
           const updatedMeters = [...meters];
           updatedMeters[currentIndex] = {
@@ -242,6 +273,21 @@ export function MeterReaderApp() {
           };
 
           console.log('📊 READING SUBMISSION (No GPS):', submissionData);
+
+          // Add to audit log
+          const auditEntry: AuditLogEntry = {
+            id: `log-${Date.now()}`,
+            meterNumber: currentMeter.meterNumber,
+            customerName: currentMeter.customerName,
+            reading: parseInt(readingValue),
+            date: submissionData.date,
+            time: submissionData.time,
+            timestamp: new Date().toISOString(),
+            reader: readerInfo.name,
+            latitude: null,
+            longitude: null,
+          };
+          setAuditLog(prev => [auditEntry, ...prev]);
 
           const updatedMeters = [...meters];
           updatedMeters[currentIndex] = {
@@ -451,6 +497,65 @@ export function MeterReaderApp() {
                 )}
               </div>
             </Card>
+
+            {/* Audit Log Section */}
+            {auditLog.length > 0 && (
+              <Card className="p-4 mt-4 shadow-soft">
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Submission Audit Log ({auditLog.length})
+                </h3>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {auditLog.map((entry) => (
+                    <div 
+                      key={entry.id} 
+                      className="bg-muted/30 rounded-lg p-3 space-y-1 text-xs border border-border"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-foreground truncate">
+                            {entry.meterNumber} - {entry.customerName}
+                          </div>
+                          <div className="text-muted-foreground">
+                            Reading: <span className="font-medium text-foreground">{entry.reading}</span>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="shrink-0 bg-success/10 text-success border-success/20">
+                          Logged
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground pt-1 border-t border-border/50">
+                        <div>
+                          <span className="opacity-70">Date:</span> {entry.date}
+                        </div>
+                        <div>
+                          <span className="opacity-70">Time:</span> {entry.time}
+                        </div>
+                        <div>
+                          <span className="opacity-70">Reader:</span> {entry.reader}
+                        </div>
+                        {entry.latitude && entry.longitude ? (
+                          <>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              <span className="opacity-70">GPS:</span> {entry.latitude.toFixed(6)}, {entry.longitude.toFixed(6)}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-destructive flex items-center gap-1">
+                            <AlertTriangle className="h-3 w-3" />
+                            No GPS
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground/70 pt-1">
+                        📤 Ready for Odoo sync
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
           </>
         )}
       </main>
