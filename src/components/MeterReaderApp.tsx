@@ -131,6 +131,13 @@ export function MeterReaderApp() {
     }
   };
 
+  const isReadingInRange = (reading: string): boolean => {
+    if (!reading || !currentMeter) return true;
+    const readingNum = parseInt(reading);
+    const [min, max] = currentMeter.range.split('-').map(num => parseInt(num.trim()));
+    return readingNum >= min && readingNum <= max;
+  };
+
   const handleSubmitReading = () => {
     if (readingValue && currentMeter) {
       const updatedMeters = [...meters];
@@ -147,6 +154,18 @@ export function MeterReaderApp() {
       if (currentIndex < meters.length - 1) {
         setTimeout(() => handleNext(), 500);
       }
+    }
+  };
+
+  const handleEditReading = () => {
+    if (currentMeter?.currentReading) {
+      setReadingValue(currentMeter.currentReading.toString());
+      const updatedMeters = [...meters];
+      updatedMeters[currentIndex] = {
+        ...currentMeter,
+        status: "pending",
+      };
+      setMeters(updatedMeters);
     }
   };
 
@@ -222,15 +241,27 @@ export function MeterReaderApp() {
                     Current Reading
                   </Label>
                   <div className="flex gap-2">
-                    <Input
-                      id="reading"
-                      type="number"
-                      placeholder="Enter meter reading"
-                      value={readingValue}
-                      onChange={(e) => setReadingValue(e.target.value)}
-                      className="text-lg font-semibold"
-                      disabled={currentMeter.status === "complete"}
-                    />
+                    <div className="flex-1">
+                      <Input
+                        id="reading"
+                        type="number"
+                        placeholder="Enter meter reading"
+                        value={readingValue}
+                        onChange={(e) => setReadingValue(e.target.value)}
+                        className={`text-lg font-semibold ${
+                          readingValue && !isReadingInRange(readingValue)
+                            ? "border-destructive focus-visible:ring-destructive"
+                            : ""
+                        }`}
+                        disabled={currentMeter.status === "complete"}
+                      />
+                      {readingValue && !isReadingInRange(readingValue) && (
+                        <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          Reading out of range ({currentMeter.range})
+                        </p>
+                      )}
+                    </div>
                     <Button
                       variant="outline"
                       size="icon"
@@ -242,25 +273,34 @@ export function MeterReaderApp() {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                {currentMeter.status === "complete" ? (
                   <Button
-                    onClick={handleSubmitReading}
-                    className="flex-1"
-                    disabled={!readingValue || currentMeter.status === "complete"}
+                    onClick={handleEditReading}
+                    variant="outline"
+                    className="w-full"
                   >
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Submit Reading
+                    Edit Reading
                   </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => setIssueReportOpen(true)}
-                    className="flex-1"
-                    disabled={currentMeter.status === "complete"}
-                  >
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    Mark Issue
-                  </Button>
-                </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleSubmitReading}
+                      className="flex-1"
+                      disabled={!readingValue}
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Submit Reading
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => setIssueReportOpen(true)}
+                      className="flex-1"
+                    >
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Mark Issue
+                    </Button>
+                  </div>
+                )}
               </div>
             </Card>
           </>
