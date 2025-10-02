@@ -277,22 +277,23 @@ export function MeterReaderApp() {
                     Edit Reading
                   </Button>
                 ) : (
-                  <div className="flex gap-2">
+                  <div className="space-y-2">
                     <Button
-                      variant="destructive"
+                      onClick={handleSubmitReading}
+                      className="w-full h-12 text-base font-semibold"
+                      disabled={!readingValue}
+                      size="lg"
+                    >
+                      <CheckCircle2 className="h-5 w-5 mr-2" />
+                      Submit Reading
+                    </Button>
+                    <Button
+                      variant="outline"
                       onClick={() => setIssueReportOpen(true)}
-                      className="flex-1"
+                      className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
                     >
                       <AlertTriangle className="h-4 w-4 mr-2" />
                       Mark Issue
-                    </Button>
-                    <Button
-                      onClick={handleSubmitReading}
-                      className="flex-1"
-                      disabled={!readingValue}
-                    >
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Submit Reading
                     </Button>
                   </div>
                 )}
