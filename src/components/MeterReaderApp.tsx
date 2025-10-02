@@ -226,6 +226,18 @@ export function MeterReaderApp() {
           <>
             <MeterCard meter={currentMeter} />
 
+            {/* Mark Issue Section */}
+            {currentMeter.status !== "complete" && (
+              <Button
+                variant="outline"
+                onClick={() => setIssueReportOpen(true)}
+                className="w-full mt-4 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Mark Issue
+              </Button>
+            )}
+
             {/* Reading Input Section */}
             <Card className="p-4 mt-4 shadow-soft">
               <h3 className="text-sm font-semibold text-foreground mb-3">Enter Reading</h3>
@@ -277,25 +289,15 @@ export function MeterReaderApp() {
                     Edit Reading
                   </Button>
                 ) : (
-                  <div className="space-y-2">
-                    <Button
-                      onClick={handleSubmitReading}
-                      className="w-full h-12 text-base font-semibold"
-                      disabled={!readingValue}
-                      size="lg"
-                    >
-                      <CheckCircle2 className="h-5 w-5 mr-2" />
-                      Submit Reading
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIssueReportOpen(true)}
-                      className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                    >
-                      <AlertTriangle className="h-4 w-4 mr-2" />
-                      Mark Issue
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={handleSubmitReading}
+                    className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90"
+                    disabled={!readingValue}
+                    size="lg"
+                  >
+                    <CheckCircle2 className="h-5 w-5 mr-2" />
+                    Submit Reading
+                  </Button>
                 )}
               </div>
             </Card>
