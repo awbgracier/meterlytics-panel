@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/hooks/use-toast";
 import { 
   Search, 
   ChevronLeft, 
@@ -241,20 +240,6 @@ export function MeterReaderApp() {
           };
           setMeters(updatedMeters);
           setReadingValue("");
-
-          // Show success toast with submission details
-          toast({
-            title: "✅ Reading Submitted",
-            description: (
-              <div className="mt-2 text-xs space-y-1">
-                <div><strong>Reading:</strong> {parseInt(readingValue)}</div>
-                <div><strong>Time:</strong> {submissionData.time}</div>
-                <div><strong>Reader:</strong> {readerInfo.name}</div>
-                <div><strong>Location:</strong> {position.coords.latitude.toFixed(6)}, {position.coords.longitude.toFixed(6)}</div>
-                <div className="mt-2 text-muted-foreground">📤 Ready to send to Odoo</div>
-              </div>
-            ),
-          });
         },
         (error) => {
           console.error('GPS Error:', error);
@@ -298,12 +283,6 @@ export function MeterReaderApp() {
           };
           setMeters(updatedMeters);
           setReadingValue("");
-
-          toast({
-            title: "⚠️ Submitted without GPS",
-            description: "Reading saved but location unavailable",
-            variant: "destructive",
-          });
         }
       );
     }
