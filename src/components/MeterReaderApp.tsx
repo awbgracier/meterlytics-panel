@@ -46,6 +46,8 @@ interface MeterReading {
   fieldFind: string;
   warning: string;
   status: "pending" | "complete" | "issue";
+  foundConnected?: boolean;
+  remarks?: string;
   lat?: number;
   lng?: number;
   issues: Array<{
@@ -220,7 +222,7 @@ export function MeterReaderApp() {
     }
   };
 
-  const handleAddNewMeter = (meterData: { meterNumber: string; customerName: string; address: string }) => {
+  const handleAddNewMeter = (meterData: { meterNumber: string; customerName: string; address: string; remarks: string }) => {
     const newMeter: MeterReading = {
       id: `${Date.now()}`,
       sequence: meters.length + 1,
@@ -242,6 +244,8 @@ export function MeterReaderApp() {
       fieldFind: "",
       warning: "",
       status: "pending",
+      foundConnected: true,
+      remarks: meterData.remarks,
       issues: [],
     };
     const updatedMeters = [...meters, newMeter];

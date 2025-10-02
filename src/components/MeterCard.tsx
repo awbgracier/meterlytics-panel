@@ -36,6 +36,8 @@ interface MeterReading {
   fieldFind: string;
   warning: string;
   status: "pending" | "complete" | "issue";
+  foundConnected?: boolean;
+  remarks?: string;
   lat?: number;
   lng?: number;
   issues: Array<{
@@ -84,6 +86,11 @@ export function MeterCard({ meter, onMarkIssue }: MeterCardProps) {
             <span className="text-xs font-medium text-muted-foreground">
               Sequence {meter.sequence}
             </span>
+            {meter.foundConnected && (
+              <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-[10px]">
+                Found Connected
+              </Badge>
+            )}
           </div>
           <h2 className="text-xl font-bold text-foreground">
             {meter.meterNumber}
@@ -187,6 +194,22 @@ export function MeterCard({ meter, onMarkIssue }: MeterCardProps) {
             </div>
             <p className="text-xs text-foreground bg-muted/30 rounded p-2">
               {meter.fieldFind}
+            </p>
+          </div>
+        )}
+
+        {meter.remarks && (
+          <div className="pt-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Badge variant="outline" className="text-xs font-bold bg-warning/10 text-warning border-warning/20">
+                N
+              </Badge>
+              <span className="text-xs font-medium text-muted-foreground">
+                Remarks:
+              </span>
+            </div>
+            <p className="text-xs text-foreground bg-warning/10 rounded p-2 border border-warning/20">
+              {meter.remarks}
             </p>
           </div>
         )}

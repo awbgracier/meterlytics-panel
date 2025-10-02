@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Search, Hash, User, Plus } from "lucide-react";
 
 interface MeterReading {
@@ -44,7 +45,7 @@ interface SearchDialogProps {
   onOpenChange: (open: boolean) => void;
   meters: MeterReading[];
   onSelect: (meter: MeterReading) => void;
-  onAddNew: (meterData: { meterNumber: string; customerName: string; address: string }) => void;
+  onAddNew: (meterData: { meterNumber: string; customerName: string; address: string; remarks: string }) => void;
 }
 
 export function SearchDialog({ open, onOpenChange, meters, onSelect, onAddNew }: SearchDialogProps) {
@@ -53,7 +54,8 @@ export function SearchDialog({ open, onOpenChange, meters, onSelect, onAddNew }:
   const [newMeter, setNewMeter] = useState({
     meterNumber: "",
     customerName: "",
-    address: ""
+    address: "",
+    remarks: ""
   });
 
   const filteredMeters = meters.filter(
@@ -75,7 +77,7 @@ export function SearchDialog({ open, onOpenChange, meters, onSelect, onAddNew }:
       onAddNew(newMeter);
       onOpenChange(false);
       setSearchTerm("");
-      setNewMeter({ meterNumber: "", customerName: "", address: "" });
+      setNewMeter({ meterNumber: "", customerName: "", address: "", remarks: "" });
       setShowAddForm(false);
     }
   };
@@ -100,8 +102,19 @@ export function SearchDialog({ open, onOpenChange, meters, onSelect, onAddNew }:
 
         {showAddForm ? (
           <div className="space-y-4">
+            <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 mb-2">
+              <div className="flex items-start gap-2">
+                <Badge variant="outline" className="bg-warning/20 text-warning border-warning/30 text-xs shrink-0">
+                  Found Connected
+                </Badge>
+                <p className="text-xs text-muted-foreground">
+                  This meter will be tagged as "Found Connected" - a meter discovered in the field without an assigned account.
+                </p>
+              </div>
+            </div>
+
             <div>
-              <Label htmlFor="meterNumber">Meter Number</Label>
+              <Label htmlFor="meterNumber">Meter Number *</Label>
               <Input
                 id="meterNumber"
                 placeholder="MTR-XXX-XXXX"
@@ -111,21 +124,31 @@ export function SearchDialog({ open, onOpenChange, meters, onSelect, onAddNew }:
               />
             </div>
             <div>
-              <Label htmlFor="customerName">Customer Name</Label>
+              <Label htmlFor="customerName">Customer Name *</Label>
               <Input
                 id="customerName"
-                placeholder="Enter customer name"
+                placeholder="Enter customer name or 'Unknown'"
                 value={newMeter.customerName}
                 onChange={(e) => setNewMeter(prev => ({ ...prev, customerName: e.target.value }))}
               />
             </div>
             <div>
-              <Label htmlFor="address">Address</Label>
+              <Label htmlFor="address">Address *</Label>
               <Input
                 id="address"
-                placeholder="Enter address"
+                placeholder="Enter address or location description"
                 value={newMeter.address}
                 onChange={(e) => setNewMeter(prev => ({ ...prev, address: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="remarks">Remarks</Label>
+              <Textarea
+                id="remarks"
+                placeholder="Additional notes about this found meter (e.g., condition, location details, reasons for connection, etc.)"
+                value={newMeter.remarks}
+                onChange={(e) => setNewMeter(prev => ({ ...prev, remarks: e.target.value }))}
+                rows={3}
               />
             </div>
             <div className="flex gap-2">
@@ -135,7 +158,7 @@ export function SearchDialog({ open, onOpenChange, meters, onSelect, onAddNew }:
                 className="flex-1"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Meter
+                Add Found Meter
               </Button>
               <Button 
                 onClick={() => setShowAddForm(false)}
