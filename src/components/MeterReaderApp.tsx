@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/hooks/use-toast";
 import { 
   Search, 
   ChevronLeft, 
@@ -166,15 +167,99 @@ export function MeterReaderApp() {
 
   const handleSubmitReading = () => {
     if (readingValue && currentMeter) {
-      const updatedMeters = [...meters];
-      updatedMeters[currentIndex] = {
-        ...currentMeter,
-        currentReading: parseInt(readingValue),
-        status: "complete",
-        tries: currentMeter.tries + 1,
-      };
-      setMeters(updatedMeters);
-      setReadingValue("");
+      // Get current position
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const submissionData = {
+            // Reading data
+            meterNumber: currentMeter.meterNumber,
+            customerName: currentMeter.customerName,
+            address: currentMeter.address,
+            reading: parseInt(readingValue),
+            lastReading: currentMeter.lastReading,
+            
+            // Timestamp
+            date: new Date().toLocaleDateString('en-US'),
+            time: new Date().toLocaleTimeString('en-US'),
+            timestamp: new Date().toISOString(),
+            
+            // Reader info
+            reader: readerInfo.name,
+            route: readerInfo.route,
+            franchiseArea: readerInfo.franchiseArea,
+            
+            // GPS coordinates
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+          };
+
+          // Log to console (simulating what would be sent to Odoo)
+          console.log('📊 READING SUBMISSION DATA:', submissionData);
+          console.log('🌐 Would send to Odoo API:', JSON.stringify(submissionData, null, 2));
+
+          // Update meter status
+          const updatedMeters = [...meters];
+          updatedMeters[currentIndex] = {
+            ...currentMeter,
+            currentReading: parseInt(readingValue),
+            status: "complete",
+            tries: currentMeter.tries + 1,
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          setMeters(updatedMeters);
+          setReadingValue("");
+
+          // Show success toast with submission details
+          toast({
+            title: "✅ Reading Submitted",
+            description: (
+              <div className="mt-2 text-xs space-y-1">
+                <div><strong>Reading:</strong> {parseInt(readingValue)}</div>
+                <div><strong>Time:</strong> {submissionData.time}</div>
+                <div><strong>Reader:</strong> {readerInfo.name}</div>
+                <div><strong>Location:</strong> {position.coords.latitude.toFixed(6)}, {position.coords.longitude.toFixed(6)}</div>
+                <div className="mt-2 text-muted-foreground">📤 Ready to send to Odoo</div>
+              </div>
+            ),
+          });
+        },
+        (error) => {
+          console.error('GPS Error:', error);
+          
+          // If GPS fails, still submit with basic data
+          const submissionData = {
+            meterNumber: currentMeter.meterNumber,
+            customerName: currentMeter.customerName,
+            reading: parseInt(readingValue),
+            date: new Date().toLocaleDateString('en-US'),
+            time: new Date().toLocaleTimeString('en-US'),
+            reader: readerInfo.name,
+            latitude: null,
+            longitude: null,
+            gpsError: error.message,
+          };
+
+          console.log('📊 READING SUBMISSION (No GPS):', submissionData);
+
+          const updatedMeters = [...meters];
+          updatedMeters[currentIndex] = {
+            ...currentMeter,
+            currentReading: parseInt(readingValue),
+            status: "complete",
+            tries: currentMeter.tries + 1,
+          };
+          setMeters(updatedMeters);
+          setReadingValue("");
+
+          toast({
+            title: "⚠️ Submitted without GPS",
+            description: "Reading saved but location unavailable",
+            variant: "destructive",
+          });
+        }
+      );
     }
   };
 
