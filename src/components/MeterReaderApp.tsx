@@ -104,6 +104,23 @@ export function MeterReaderApp() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [issueReportOpen, setIssueReportOpen] = useState(false);
   const [readingValue, setReadingValue] = useState("");
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update time every minute
+  useState(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+  });
+
+  // Mock reader info - in production this would come from auth/API
+  const readerInfo = {
+    name: "Juan Dela Cruz",
+    franchiseArea: "Metro Manila North",
+    route: "Route 42-A",
+    group: "Group 5"
+  };
 
   const currentMeter = meters[currentIndex];
   const completedCount = meters.filter(m => m.status === "complete").length;
@@ -196,6 +213,23 @@ export function MeterReaderApp() {
               <Search className="h-4 w-4" />
               Search
             </Button>
+          </div>
+
+          {/* Reader Info */}
+          <div className="bg-muted/30 rounded-lg p-2.5 mb-3 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-foreground">{readerInfo.name}</span>
+              <span className="text-xs text-muted-foreground">
+                {currentTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span>{readerInfo.franchiseArea}</span>
+              <span>•</span>
+              <span>{readerInfo.route}</span>
+              <span>•</span>
+              <span>{readerInfo.group}</span>
+            </div>
           </div>
           
           <div className="flex items-center justify-between gap-3">
