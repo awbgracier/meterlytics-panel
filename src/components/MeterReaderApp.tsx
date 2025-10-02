@@ -35,11 +35,12 @@ interface MeterReading {
   status: "pending" | "complete" | "issue";
   lat?: number;
   lng?: number;
-  issue?: {
+  issues: Array<{
     category: string;
     issue: string;
     customerComplaint: boolean;
-  };
+    remarks?: string;
+  }>;
 }
 
 const mockMeters: MeterReading[] = [
@@ -58,6 +59,7 @@ const mockMeters: MeterReading[] = [
     status: "pending",
     lat: 14.5995,
     lng: 120.9842,
+    issues: [],
   },
   {
     id: "2",
@@ -74,6 +76,7 @@ const mockMeters: MeterReading[] = [
     status: "issue",
     lat: 14.6005,
     lng: 120.9852,
+    issues: [],
   },
   {
     id: "3",
@@ -91,6 +94,7 @@ const mockMeters: MeterReading[] = [
     status: "complete",
     lat: 14.6015,
     lng: 120.9862,
+    issues: [],
   },
 ];
 
@@ -146,17 +150,17 @@ export function MeterReaderApp() {
     }
   };
 
-  const handleMarkIssue = (issueData: { category: string; issue: string; customerComplaint: boolean }) => {
+  const handleMarkIssue = (issueData: { category: string; issue: string; customerComplaint: boolean; remarks?: string }) => {
     const updatedMeters = [...meters];
     updatedMeters[currentIndex] = {
       ...currentMeter,
       status: "issue",
       missed: true,
       tries: currentMeter.tries + 1,
-      issue: issueData,
+      issues: [...currentMeter.issues, issueData],
     };
     setMeters(updatedMeters);
-    setIssueReportOpen(false);
+    // Keep dialog open so user can add more issues if needed
   };
 
   return (

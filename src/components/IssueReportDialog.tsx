@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Drawer,
   DrawerClose,
@@ -109,13 +110,15 @@ const CATEGORIES: Category[] = [
 interface IssueReportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (issue: { category: string; issue: string; customerComplaint: boolean }) => void;
+  onSubmit: (issue: { category: string; issue: string; customerComplaint: boolean; remarks?: string }) => void;
 }
 
 export function IssueReportDialog({ open, onOpenChange, onSubmit }: IssueReportDialogProps) {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
   const [customerComplaint, setCustomerComplaint] = useState(false);
+  const [remarks, setRemarks] = useState("");
 
   const handleCategorySelect = (category: Category) => {
     setSelectedCategory(category);
@@ -123,23 +126,39 @@ export function IssueReportDialog({ open, onOpenChange, onSubmit }: IssueReportD
   };
 
   const handleIssueSelect = (issue: Issue) => {
-    onSubmit({
-      category: selectedCategory!.label,
-      issue: issue.label,
-      customerComplaint,
-    });
-    handleClose();
+    setSelectedIssue(issue);
+    setStep(3);
+  };
+
+  const handleSubmit = () => {
+    if (selectedIssue && selectedCategory) {
+      onSubmit({
+        category: selectedCategory.label,
+        issue: selectedIssue.label,
+        customerComplaint,
+        remarks: remarks.trim() || undefined,
+      });
+      handleClose();
+    }
   };
 
   const handleBack = () => {
-    setStep(1);
-    setSelectedCategory(null);
+    if (step === 3) {
+      setStep(2);
+      setSelectedIssue(null);
+      setRemarks("");
+    } else if (step === 2) {
+      setStep(1);
+      setSelectedCategory(null);
+    }
   };
 
   const handleClose = () => {
     setStep(1);
     setSelectedCategory(null);
+    setSelectedIssue(null);
     setCustomerComplaint(false);
+    setRemarks("");
     onOpenChange(false);
   };
 
@@ -148,7 +167,7 @@ export function IssueReportDialog({ open, onOpenChange, onSubmit }: IssueReportD
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle className="flex items-center gap-2">
-            {step === 2 && (
+            {(step === 2 || step === 3) && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -158,10 +177,14 @@ export function IssueReportDialog({ open, onOpenChange, onSubmit }: IssueReportD
                 <ChevronLeft className="h-5 w-5" />
               </Button>
             )}
-            {step === 1 ? "Select Issue Category" : selectedCategory?.label}
+            {step === 1 && "Select Issue Category"}
+            {step === 2 && selectedCategory?.label}
+            {step === 3 && "Add Remarks"}
           </DrawerTitle>
           <DrawerDescription>
-            {step === 1 ? "Choose the type of issue" : "Select the specific issue"}
+            {step === 1 && "Choose the type of issue"}
+            {step === 2 && "Select the specific issue"}
+            {step === 3 && "Add optional remarks about the issue"}
           </DrawerDescription>
         </DrawerHeader>
 
@@ -200,7 +223,7 @@ export function IssueReportDialog({ open, onOpenChange, onSubmit }: IssueReportD
                 })}
               </div>
             </>
-          ) : (
+          ) : step === 2 ? (
             <div className="space-y-2">
               {selectedCategory?.issues.map((issue) => (
                 <Button
@@ -234,15 +257,61 @@ export function IssueReportDialog({ open, onOpenChange, onSubmit }: IssueReportD
                 </Button>
               ))}
             </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Issue Summary */}
+              <div className="bg-muted/50 rounded-lg p-3">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium">Category:</span> {selectedCategory?.label}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium">Issue:</span> {selectedIssue?.label}
+                  </p>
+                  {customerComplaint && (
+                    <Badge variant="destructive" className="text-[10px] mt-1">
+                      Customer Complaint
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Remarks Field */}
+              <div className="space-y-2">
+                <Label htmlFor="remarks" className="text-sm font-medium">
+                  Remarks (Optional)
+                </Label>
+                <Textarea
+                  id="remarks"
+                  placeholder="Add any additional notes or observations..."
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  className="min-h-[120px] resize-none"
+                />
+              </div>
+            </div>
           )}
         </div>
 
         <DrawerFooter>
-          <DrawerClose asChild>
-            <Button variant="outline" onClick={handleClose}>
-              Cancel
-            </Button>
-          </DrawerClose>
+          {step === 3 ? (
+            <>
+              <Button onClick={handleSubmit} className="w-full">
+                Submit Issue
+              </Button>
+              <DrawerClose asChild>
+                <Button variant="outline" onClick={handleClose}>
+                  Cancel
+                </Button>
+              </DrawerClose>
+            </>
+          ) : (
+            <DrawerClose asChild>
+              <Button variant="outline" onClick={handleClose}>
+                Cancel
+              </Button>
+            </DrawerClose>
+          )}
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
