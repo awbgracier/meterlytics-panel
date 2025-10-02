@@ -13,7 +13,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  Home
+  Home,
+  Upload
 } from "lucide-react";
 import { SearchDialog } from "./SearchDialog";
 import { MeterCard } from "./MeterCard";
@@ -125,6 +126,14 @@ export function MeterReaderApp() {
   const currentMeter = meters[currentIndex];
   const completedCount = meters.filter(m => m.status === "complete").length;
   const issueCount = meters.filter(m => m.status === "issue").length;
+  const pendingCount = meters.filter(m => m.status === "pending").length;
+  const totalProcessed = completedCount + issueCount;
+  const allProcessed = pendingCount === 0;
+
+  const handleUpload = () => {
+    // TODO: Implement upload functionality
+    alert(`Uploading ${totalProcessed} meter readings...`);
+  };
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
@@ -204,15 +213,44 @@ export function MeterReaderApp() {
               <Home className="h-5 w-5 text-primary" />
               <h1 className="text-lg font-bold text-foreground">Meter Reader</h1>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSearchOpen(true)}
-              className="gap-2"
-            >
-              <Search className="h-4 w-4" />
-              Search
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSearchOpen(true)}
+                className="gap-2"
+              >
+                <Search className="h-4 w-4" />
+                Search
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleUpload}
+                disabled={!allProcessed}
+                className="gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                Upload
+              </Button>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-medium text-foreground">
+                Progress: {totalProcessed} / {meters.length} meters
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {Math.round((totalProcessed / meters.length) * 100)}%
+              </span>
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-300"
+                style={{ width: `${(totalProcessed / meters.length) * 100}%` }}
+              />
+            </div>
           </div>
 
           {/* Reader Info */}
@@ -244,7 +282,7 @@ export function MeterReaderApp() {
               </Badge>
               <Badge variant="outline" className="gap-1.5 bg-status-pending/10 text-status-pending border-status-pending/20">
                 <Clock className="h-3 w-3" />
-                {meters.length - completedCount - issueCount}
+                {pendingCount}
               </Badge>
             </div>
             <div className="text-sm font-medium text-muted-foreground">
