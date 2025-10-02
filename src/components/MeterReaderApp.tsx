@@ -13,12 +13,12 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  Home,
   Upload
 } from "lucide-react";
 import { SearchDialog } from "./SearchDialog";
 import { MeterCard } from "./MeterCard";
 import { IssueReportDialog } from "./IssueReportDialog";
+import decorpLogo from "@/assets/decorp-logo.jpg";
 
 interface MeterReading {
   id: string;
@@ -210,7 +210,7 @@ export function MeterReaderApp() {
         <div className="px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Home className="h-5 w-5 text-primary" />
+              <img src={decorpLogo} alt="DECORP Logo" className="h-8 w-8 rounded-full object-cover" />
               <h1 className="text-lg font-bold text-foreground">Meter Reader</h1>
             </div>
             <Button
