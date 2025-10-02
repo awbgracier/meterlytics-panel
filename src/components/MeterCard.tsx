@@ -112,7 +112,9 @@ export function MeterCard({ meter }: MeterCardProps) {
 
         <div className="bg-muted/50 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-1">
-            <Target className="h-3.5 w-3.5 text-muted-foreground" />
+            <Badge variant="outline" className="text-xs font-bold bg-primary/10 text-primary border-primary/20">
+              R
+            </Badge>
             <span className="text-xs text-muted-foreground">Range</span>
           </div>
           <p className="text-sm font-semibold text-foreground">
@@ -124,14 +126,24 @@ export function MeterCard({ meter }: MeterCardProps) {
       {/* Status Fields */}
       <div className="space-y-2 border-t border-border pt-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-muted-foreground">Missed:</span>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs font-bold bg-primary/10 text-primary border-primary/20">
+              M
+            </Badge>
+            <span className="text-xs font-medium text-muted-foreground">Missed:</span>
+          </div>
           <Badge variant={meter.missed ? "destructive" : "outline"} className="text-xs">
             {meter.missed ? "Yes" : "No"}
           </Badge>
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-muted-foreground">Tries:</span>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs font-bold bg-primary/10 text-primary border-primary/20">
+              T
+            </Badge>
+            <span className="text-xs font-medium text-muted-foreground">Tries:</span>
+          </div>
           <Badge variant="outline" className="text-xs">
             {meter.tries}
           </Badge>
@@ -139,9 +151,14 @@ export function MeterCard({ meter }: MeterCardProps) {
 
         {meter.fieldFind && (
           <div className="pt-2">
-            <span className="text-xs font-medium text-muted-foreground block mb-1">
-              Field Find:
-            </span>
+            <div className="flex items-center gap-2 mb-1">
+              <Badge variant="outline" className="text-xs font-bold bg-primary/10 text-primary border-primary/20">
+                L
+              </Badge>
+              <span className="text-xs font-medium text-muted-foreground">
+                Field Find:
+              </span>
+            </div>
             <p className="text-xs text-foreground bg-muted/30 rounded p-2">
               {meter.fieldFind}
             </p>
@@ -151,7 +168,9 @@ export function MeterCard({ meter }: MeterCardProps) {
         {meter.warning && (
           <div className="pt-2">
             <div className="flex items-start gap-2 bg-warning/10 border border-warning/20 rounded-lg p-2">
-              <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+              <Badge variant="outline" className="text-xs font-bold bg-warning/20 text-warning border-warning/30 shrink-0">
+                W
+              </Badge>
               <div>
                 <span className="text-xs font-semibold text-warning block mb-0.5">
                   Warning
