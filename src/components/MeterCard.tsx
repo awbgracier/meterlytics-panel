@@ -25,6 +25,11 @@ interface MeterReading {
   status: "pending" | "complete" | "issue";
   lat?: number;
   lng?: number;
+  issue?: {
+    category: string;
+    issue: string;
+    customerComplaint: boolean;
+  };
 }
 
 interface MeterCardProps {
@@ -178,6 +183,32 @@ export function MeterCard({ meter }: MeterCardProps) {
                 <p className="text-xs text-foreground">
                   {meter.warning}
                 </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {meter.issue && (
+          <div className="pt-2">
+            <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/20 rounded-lg p-2">
+              <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <span className="text-xs font-semibold text-destructive block mb-1">
+                  Issue Reported
+                </span>
+                <div className="space-y-1">
+                  <p className="text-xs text-foreground">
+                    <span className="font-medium">Category:</span> {meter.issue.category}
+                  </p>
+                  <p className="text-xs text-foreground">
+                    <span className="font-medium">Issue:</span> {meter.issue.issue}
+                  </p>
+                  {meter.issue.customerComplaint && (
+                    <Badge variant="destructive" className="text-[10px] mt-1">
+                      Customer Complaint
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
           </div>

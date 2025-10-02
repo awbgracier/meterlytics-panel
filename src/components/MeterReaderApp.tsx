@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { SearchDialog } from "./SearchDialog";
 import { MeterCard } from "./MeterCard";
+import { IssueReportDialog } from "./IssueReportDialog";
 
 interface MeterReading {
   id: string;
@@ -34,6 +35,11 @@ interface MeterReading {
   status: "pending" | "complete" | "issue";
   lat?: number;
   lng?: number;
+  issue?: {
+    category: string;
+    issue: string;
+    customerComplaint: boolean;
+  };
 }
 
 const mockMeters: MeterReading[] = [
@@ -92,6 +98,7 @@ export function MeterReaderApp() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [meters, setMeters] = useState<MeterReading[]>(mockMeters);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [issueReportOpen, setIssueReportOpen] = useState(false);
   const [readingValue, setReadingValue] = useState("");
 
   const currentMeter = meters[currentIndex];
@@ -139,15 +146,17 @@ export function MeterReaderApp() {
     }
   };
 
-  const handleMarkIssue = () => {
+  const handleMarkIssue = (issueData: { category: string; issue: string; customerComplaint: boolean }) => {
     const updatedMeters = [...meters];
     updatedMeters[currentIndex] = {
       ...currentMeter,
       status: "issue",
       missed: true,
       tries: currentMeter.tries + 1,
+      issue: issueData,
     };
     setMeters(updatedMeters);
+    setIssueReportOpen(false);
   };
 
   return (
@@ -240,7 +249,7 @@ export function MeterReaderApp() {
                   </Button>
                   <Button
                     variant="destructive"
-                    onClick={handleMarkIssue}
+                    onClick={() => setIssueReportOpen(true)}
                     className="flex-1"
                     disabled={currentMeter.status === "complete"}
                   >
@@ -283,6 +292,13 @@ export function MeterReaderApp() {
         onOpenChange={setSearchOpen}
         meters={meters}
         onSelect={handleSearch}
+      />
+
+      {/* Issue Report Dialog */}
+      <IssueReportDialog
+        open={issueReportOpen}
+        onOpenChange={setIssueReportOpen}
+        onSubmit={handleMarkIssue}
       />
     </div>
   );
