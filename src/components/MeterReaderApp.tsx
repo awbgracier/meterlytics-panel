@@ -213,43 +213,45 @@ export function MeterReaderApp() {
               <Home className="h-5 w-5 text-primary" />
               <h1 className="text-lg font-bold text-foreground">Meter Reader</h1>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSearchOpen(true)}
-                className="gap-2"
-              >
-                <Search className="h-4 w-4" />
-                Search
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleUpload}
-                disabled={!allProcessed}
-                className="gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                Upload
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSearchOpen(true)}
+              className="gap-2"
+            >
+              <Search className="h-4 w-4" />
+              Search
+            </Button>
           </div>
 
           {/* Progress Bar */}
           <div className="mb-3">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-foreground">
-                Progress: {totalProcessed} / {meters.length} meters
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {Math.round((totalProcessed / meters.length) * 100)}%
-              </span>
-            </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary transition-all duration-300"
-                style={{ width: `${(totalProcessed / meters.length) * 100}%` }}
-              />
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium text-foreground">
+                    Progress: {totalProcessed} / {meters.length} meters
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {Math.round((totalProcessed / meters.length) * 100)}%
+                  </span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-300"
+                    style={{ width: `${(totalProcessed / meters.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={handleUpload}
+                disabled={!allProcessed}
+                className="gap-2 bg-success hover:bg-success/90 text-white shrink-0"
+              >
+                <Upload className="h-4 w-4" />
+                Upload
+              </Button>
             </div>
           </div>
 
