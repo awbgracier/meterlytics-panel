@@ -16,10 +16,22 @@ interface MeterReading {
   meterNumber: string;
   customerName: string;
   address: string;
-  lastReading: number;
-  currentReading?: number;
+  lastReadings: {
+    generation: number;
+    export: number;
+    import: number;
+  };
+  currentReadings?: {
+    generation?: number;
+    export?: number;
+    import?: number;
+  };
   missed: boolean;
-  range: string;
+  ranges: {
+    generation: string;
+    export: string;
+    import: string;
+  };
   tries: number;
   fieldFind: string;
   warning: string;
@@ -106,28 +118,34 @@ export function MeterCard({ meter, onMarkIssue }: MeterCardProps) {
         )}
       </div>
 
-      {/* Key Metrics Grid */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-muted/50 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Last Reading</span>
+      {/* Last Readings Section */}
+      <div className="mb-4 space-y-2">
+        <h4 className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+          <TrendingUp className="h-3.5 w-3.5" />
+          Last Readings
+        </h4>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-muted/50 rounded-lg p-2">
+            <span className="text-[10px] text-muted-foreground block mb-0.5">Generation</span>
+            <p className="text-sm font-bold text-foreground">
+              {meter.lastReadings.generation.toLocaleString()}
+            </p>
+            <span className="text-[9px] text-muted-foreground">{meter.ranges.generation}</span>
           </div>
-          <p className="text-lg font-bold text-foreground">
-            {meter.lastReading.toLocaleString()}
-          </p>
-        </div>
-
-        <div className="bg-muted/50 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Badge variant="outline" className="text-xs font-bold bg-primary/10 text-primary border-primary/20">
-              R
-            </Badge>
-            <span className="text-xs text-muted-foreground">Range</span>
+          <div className="bg-muted/50 rounded-lg p-2">
+            <span className="text-[10px] text-muted-foreground block mb-0.5">Export</span>
+            <p className="text-sm font-bold text-foreground">
+              {meter.lastReadings.export.toLocaleString()}
+            </p>
+            <span className="text-[9px] text-muted-foreground">{meter.ranges.export}</span>
           </div>
-          <p className="text-sm font-semibold text-foreground">
-            {meter.range}
-          </p>
+          <div className="bg-muted/50 rounded-lg p-2">
+            <span className="text-[10px] text-muted-foreground block mb-0.5">Import</span>
+            <p className="text-sm font-bold text-foreground">
+              {meter.lastReadings.import.toLocaleString()}
+            </p>
+            <span className="text-[9px] text-muted-foreground">{meter.ranges.import}</span>
+          </div>
         </div>
       </div>
 
@@ -224,14 +242,37 @@ export function MeterCard({ meter, onMarkIssue }: MeterCardProps) {
           </div>
         )}
 
-        {meter.currentReading && (
-          <div className="pt-2">
-            <span className="text-xs font-medium text-muted-foreground block mb-1">
-              Current Reading:
+        {meter.currentReadings && (
+          <div className="pt-2 space-y-2">
+            <span className="text-xs font-semibold text-success block mb-1">
+              Current Readings:
             </span>
-            <p className="text-2xl font-bold text-success">
-              {meter.currentReading.toLocaleString()}
-            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {meter.currentReadings.generation && (
+                <div className="bg-success/10 rounded-lg p-2 border border-success/20">
+                  <span className="text-[10px] text-success block mb-0.5">Generation</span>
+                  <p className="text-sm font-bold text-success">
+                    {meter.currentReadings.generation.toLocaleString()}
+                  </p>
+                </div>
+              )}
+              {meter.currentReadings.export && (
+                <div className="bg-success/10 rounded-lg p-2 border border-success/20">
+                  <span className="text-[10px] text-success block mb-0.5">Export</span>
+                  <p className="text-sm font-bold text-success">
+                    {meter.currentReadings.export.toLocaleString()}
+                  </p>
+                </div>
+              )}
+              {meter.currentReadings.import && (
+                <div className="bg-success/10 rounded-lg p-2 border border-success/20">
+                  <span className="text-[10px] text-success block mb-0.5">Import</span>
+                  <p className="text-sm font-bold text-success">
+                    {meter.currentReadings.import.toLocaleString()}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

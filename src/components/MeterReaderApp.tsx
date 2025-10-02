@@ -26,10 +26,22 @@ interface MeterReading {
   meterNumber: string;
   customerName: string;
   address: string;
-  lastReading: number;
-  currentReading?: number;
+  lastReadings: {
+    generation: number;
+    export: number;
+    import: number;
+  };
+  currentReadings?: {
+    generation?: number;
+    export?: number;
+    import?: number;
+  };
   missed: boolean;
-  range: string;
+  ranges: {
+    generation: string;
+    export: string;
+    import: string;
+  };
   tries: number;
   fieldFind: string;
   warning: string;
@@ -51,9 +63,17 @@ const mockMeters: MeterReading[] = [
     meterNumber: "MTR-001-2024",
     customerName: "John Smith",
     address: "123 Main Street, Springfield",
-    lastReading: 45678,
+    lastReadings: {
+      generation: 45678,
+      export: 12345,
+      import: 23456
+    },
     missed: false,
-    range: "45000-50000",
+    ranges: {
+      generation: "45000-50000",
+      export: "12000-15000",
+      import: "23000-26000"
+    },
     tries: 0,
     fieldFind: "Front yard, blue gate",
     warning: "",
@@ -68,9 +88,17 @@ const mockMeters: MeterReading[] = [
     meterNumber: "MTR-002-2024",
     customerName: "Maria Garcia",
     address: "456 Oak Avenue, Springfield",
-    lastReading: 32145,
+    lastReadings: {
+      generation: 32145,
+      export: 8765,
+      import: 15432
+    },
     missed: true,
-    range: "32000-35000",
+    ranges: {
+      generation: "32000-35000",
+      export: "8000-10000",
+      import: "15000-18000"
+    },
     tries: 2,
     fieldFind: "Side of house, near AC unit",
     warning: "Dog on premises",
@@ -85,10 +113,22 @@ const mockMeters: MeterReading[] = [
     meterNumber: "MTR-003-2024",
     customerName: "Robert Johnson",
     address: "789 Pine Road, Springfield",
-    lastReading: 67890,
-    currentReading: 68234,
+    lastReadings: {
+      generation: 67890,
+      export: 19876,
+      import: 34567
+    },
+    currentReadings: {
+      generation: 68234,
+      export: 20100,
+      import: 34890
+    },
     missed: false,
-    range: "67000-72000",
+    ranges: {
+      generation: "67000-72000",
+      export: "19000-22000",
+      import: "34000-37000"
+    },
     tries: 1,
     fieldFind: "Backyard, behind garage",
     warning: "",
@@ -103,7 +143,11 @@ interface AuditLogEntry {
   id: string;
   meterNumber: string;
   customerName: string;
-  reading: number;
+  readings: {
+    generation: number;
+    export: number;
+    import: number;
+  };
   date: string;
   time: string;
   timestamp: string;
@@ -118,7 +162,11 @@ export function MeterReaderApp() {
   const [meters, setMeters] = useState<MeterReading[]>(mockMeters);
   const [searchOpen, setSearchOpen] = useState(false);
   const [issueReportOpen, setIssueReportOpen] = useState(false);
-  const [readingValue, setReadingValue] = useState("");
+  const [readingValues, setReadingValues] = useState({
+    generation: "",
+    export: "",
+    import: ""
+  });
   const [currentTime, setCurrentTime] = useState(new Date());
   const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
 
@@ -153,14 +201,14 @@ export function MeterReaderApp() {
   const handlePrevious = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
-      setReadingValue("");
+      setReadingValues({ generation: "", export: "", import: "" });
     }
   };
 
   const handleNext = () => {
     if (currentIndex < meters.length - 1) {
       setCurrentIndex(currentIndex + 1);
-      setReadingValue("");
+      setReadingValues({ generation: "", export: "", import: "" });
     }
   };
 
@@ -168,19 +216,50 @@ export function MeterReaderApp() {
     const index = meters.findIndex(m => m.id === meter.id);
     if (index !== -1) {
       setCurrentIndex(index);
-      setReadingValue("");
+      setReadingValues({ generation: "", export: "", import: "" });
     }
   };
 
-  const isReadingInRange = (reading: string): boolean => {
+  const handleAddNewMeter = (meterData: { meterNumber: string; customerName: string; address: string }) => {
+    const newMeter: MeterReading = {
+      id: `${Date.now()}`,
+      sequence: meters.length + 1,
+      meterNumber: meterData.meterNumber,
+      customerName: meterData.customerName,
+      address: meterData.address,
+      lastReadings: {
+        generation: 0,
+        export: 0,
+        import: 0
+      },
+      missed: false,
+      ranges: {
+        generation: "0-100000",
+        export: "0-100000",
+        import: "0-100000"
+      },
+      tries: 0,
+      fieldFind: "",
+      warning: "",
+      status: "pending",
+      issues: [],
+    };
+    const updatedMeters = [...meters, newMeter];
+    setMeters(updatedMeters);
+    setCurrentIndex(updatedMeters.length - 1);
+    setReadingValues({ generation: "", export: "", import: "" });
+  };
+
+  const isReadingInRange = (reading: string, type: 'generation' | 'export' | 'import'): boolean => {
     if (!reading || !currentMeter) return true;
     const readingNum = parseInt(reading);
-    const [min, max] = currentMeter.range.split('-').map(num => parseInt(num.trim()));
+    const [min, max] = currentMeter.ranges[type].split('-').map(num => parseInt(num.trim()));
     return readingNum >= min && readingNum <= max;
   };
 
   const handleSubmitReading = () => {
-    if (readingValue && currentMeter) {
+    const hasAllReadings = readingValues.generation && readingValues.export && readingValues.import;
+    if (hasAllReadings && currentMeter) {
       // Get current position
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -189,8 +268,12 @@ export function MeterReaderApp() {
             meterNumber: currentMeter.meterNumber,
             customerName: currentMeter.customerName,
             address: currentMeter.address,
-            reading: parseInt(readingValue),
-            lastReading: currentMeter.lastReading,
+            readings: {
+              generation: parseInt(readingValues.generation),
+              export: parseInt(readingValues.export),
+              import: parseInt(readingValues.import)
+            },
+            lastReadings: currentMeter.lastReadings,
             
             // Timestamp
             date: new Date().toLocaleDateString('en-US'),
@@ -217,7 +300,11 @@ export function MeterReaderApp() {
             id: `log-${Date.now()}`,
             meterNumber: currentMeter.meterNumber,
             customerName: currentMeter.customerName,
-            reading: parseInt(readingValue),
+            readings: {
+              generation: parseInt(readingValues.generation),
+              export: parseInt(readingValues.export),
+              import: parseInt(readingValues.import)
+            },
             date: submissionData.date,
             time: submissionData.time,
             timestamp: submissionData.timestamp,
@@ -232,14 +319,18 @@ export function MeterReaderApp() {
           const updatedMeters = [...meters];
           updatedMeters[currentIndex] = {
             ...currentMeter,
-            currentReading: parseInt(readingValue),
+            currentReadings: {
+              generation: parseInt(readingValues.generation),
+              export: parseInt(readingValues.export),
+              import: parseInt(readingValues.import)
+            },
             status: "complete",
             tries: currentMeter.tries + 1,
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
           setMeters(updatedMeters);
-          setReadingValue("");
+          setReadingValues({ generation: "", export: "", import: "" });
         },
         (error) => {
           console.error('GPS Error:', error);
@@ -248,7 +339,11 @@ export function MeterReaderApp() {
           const submissionData = {
             meterNumber: currentMeter.meterNumber,
             customerName: currentMeter.customerName,
-            reading: parseInt(readingValue),
+            readings: {
+              generation: parseInt(readingValues.generation),
+              export: parseInt(readingValues.export),
+              import: parseInt(readingValues.import)
+            },
             date: new Date().toLocaleDateString('en-US'),
             time: new Date().toLocaleTimeString('en-US'),
             reader: readerInfo.name,
@@ -264,7 +359,11 @@ export function MeterReaderApp() {
             id: `log-${Date.now()}`,
             meterNumber: currentMeter.meterNumber,
             customerName: currentMeter.customerName,
-            reading: parseInt(readingValue),
+            readings: {
+              generation: parseInt(readingValues.generation),
+              export: parseInt(readingValues.export),
+              import: parseInt(readingValues.import)
+            },
             date: submissionData.date,
             time: submissionData.time,
             timestamp: new Date().toISOString(),
@@ -277,20 +376,28 @@ export function MeterReaderApp() {
           const updatedMeters = [...meters];
           updatedMeters[currentIndex] = {
             ...currentMeter,
-            currentReading: parseInt(readingValue),
+            currentReadings: {
+              generation: parseInt(readingValues.generation),
+              export: parseInt(readingValues.export),
+              import: parseInt(readingValues.import)
+            },
             status: "complete",
             tries: currentMeter.tries + 1,
           };
           setMeters(updatedMeters);
-          setReadingValue("");
+          setReadingValues({ generation: "", export: "", import: "" });
         }
       );
     }
   };
 
   const handleEditReading = () => {
-    if (currentMeter?.currentReading) {
-      setReadingValue(currentMeter.currentReading.toString());
+    if (currentMeter?.currentReadings) {
+      setReadingValues({
+        generation: currentMeter.currentReadings.generation?.toString() || "",
+        export: currentMeter.currentReadings.export?.toString() || "",
+        import: currentMeter.currentReadings.import?.toString() || ""
+      });
       const updatedMeters = [...meters];
       updatedMeters[currentIndex] = {
         ...currentMeter,
@@ -415,43 +522,96 @@ export function MeterReaderApp() {
 
             {/* Reading Input Section */}
             <Card className="p-4 mt-4 shadow-soft">
-              <h3 className="text-sm font-semibold text-foreground mb-3">Enter Reading</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Enter Readings</h3>
               
               <div className="space-y-3">
+                {/* Generation Reading */}
                 <div>
-                  <Label htmlFor="reading" className="text-xs text-muted-foreground mb-1.5 block">
-                    Current Reading
+                  <Label htmlFor="generation" className="text-xs text-muted-foreground mb-1.5 block">
+                    Generation Reading
                   </Label>
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <Input
-                        id="reading"
+                        id="generation"
                         type="number"
-                        placeholder="Enter meter reading"
-                        value={readingValue}
-                        onChange={(e) => setReadingValue(e.target.value)}
-                        className={`text-lg font-semibold ${
-                          readingValue && !isReadingInRange(readingValue)
+                        placeholder="Enter generation"
+                        value={readingValues.generation}
+                        onChange={(e) => setReadingValues(prev => ({ ...prev, generation: e.target.value }))}
+                        className={`text-base font-semibold ${
+                          readingValues.generation && !isReadingInRange(readingValues.generation, 'generation')
                             ? "border-destructive focus-visible:ring-destructive"
                             : ""
                         }`}
                         disabled={currentMeter.status === "complete"}
                       />
-                      {readingValue && !isReadingInRange(readingValue) && (
+                      {readingValues.generation && !isReadingInRange(readingValues.generation, 'generation') && (
                         <p className="text-xs text-destructive mt-1 flex items-center gap-1">
                           <AlertTriangle className="h-3 w-3" />
-                          Reading out of range ({currentMeter.range})
+                          Out of range ({currentMeter.ranges.generation})
                         </p>
                       )}
                     </div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="shrink-0"
-                      disabled={currentMeter.status === "complete"}
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
+                  </div>
+                </div>
+
+                {/* Export Reading */}
+                <div>
+                  <Label htmlFor="export" className="text-xs text-muted-foreground mb-1.5 block">
+                    Export Reading
+                  </Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Input
+                        id="export"
+                        type="number"
+                        placeholder="Enter export"
+                        value={readingValues.export}
+                        onChange={(e) => setReadingValues(prev => ({ ...prev, export: e.target.value }))}
+                        className={`text-base font-semibold ${
+                          readingValues.export && !isReadingInRange(readingValues.export, 'export')
+                            ? "border-destructive focus-visible:ring-destructive"
+                            : ""
+                        }`}
+                        disabled={currentMeter.status === "complete"}
+                      />
+                      {readingValues.export && !isReadingInRange(readingValues.export, 'export') && (
+                        <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          Out of range ({currentMeter.ranges.export})
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Import Reading */}
+                <div>
+                  <Label htmlFor="import" className="text-xs text-muted-foreground mb-1.5 block">
+                    Import Reading
+                  </Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Input
+                        id="import"
+                        type="number"
+                        placeholder="Enter import"
+                        value={readingValues.import}
+                        onChange={(e) => setReadingValues(prev => ({ ...prev, import: e.target.value }))}
+                        className={`text-base font-semibold ${
+                          readingValues.import && !isReadingInRange(readingValues.import, 'import')
+                            ? "border-destructive focus-visible:ring-destructive"
+                            : ""
+                        }`}
+                        disabled={currentMeter.status === "complete"}
+                      />
+                      {readingValues.import && !isReadingInRange(readingValues.import, 'import') && (
+                        <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          Out of range ({currentMeter.ranges.import})
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -461,17 +621,17 @@ export function MeterReaderApp() {
                     variant="outline"
                     className="w-full"
                   >
-                    Edit Reading
+                    Edit Readings
                   </Button>
                 ) : (
                   <Button
                     onClick={handleSubmitReading}
                     className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90"
-                    disabled={!readingValue}
+                    disabled={!readingValues.generation || !readingValues.export || !readingValues.import}
                     size="lg"
                   >
                     <CheckCircle2 className="h-5 w-5 mr-2" />
-                    Submit Reading
+                    Submit All Readings
                   </Button>
                 )}
               </div>
@@ -495,8 +655,16 @@ export function MeterReaderApp() {
                           <div className="font-semibold text-foreground truncate">
                             {entry.meterNumber} - {entry.customerName}
                           </div>
-                          <div className="text-muted-foreground">
-                            Reading: <span className="font-medium text-foreground">{entry.reading}</span>
+                          <div className="space-y-0.5 mt-1">
+                            <div className="text-muted-foreground">
+                              Generation: <span className="font-semibold text-foreground">{entry.readings.generation.toLocaleString()}</span>
+                            </div>
+                            <div className="text-muted-foreground">
+                              Export: <span className="font-semibold text-foreground">{entry.readings.export.toLocaleString()}</span>
+                            </div>
+                            <div className="text-muted-foreground">
+                              Import: <span className="font-semibold text-foreground">{entry.readings.import.toLocaleString()}</span>
+                            </div>
                           </div>
                         </div>
                         <Badge variant="outline" className="shrink-0 bg-success/10 text-success border-success/20">
@@ -563,12 +731,13 @@ export function MeterReaderApp() {
       </footer>
 
       {/* Search Dialog */}
-      <SearchDialog
-        open={searchOpen}
-        onOpenChange={setSearchOpen}
-        meters={meters}
-        onSelect={handleSearch}
-      />
+            <SearchDialog
+              open={searchOpen}
+              onOpenChange={setSearchOpen}
+              meters={meters}
+              onSelect={handleSearch}
+              onAddNew={handleAddNewMeter}
+            />
 
       {/* Issue Report Dialog */}
       <IssueReportDialog

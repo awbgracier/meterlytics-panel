@@ -7,7 +7,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Hash, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Search, Hash, User, Plus } from "lucide-react";
 
 interface MeterReading {
   id: string;
@@ -15,10 +17,22 @@ interface MeterReading {
   meterNumber: string;
   customerName: string;
   address: string;
-  lastReading: number;
-  currentReading?: number;
+  lastReadings: {
+    generation: number;
+    export: number;
+    import: number;
+  };
+  currentReadings?: {
+    generation?: number;
+    export?: number;
+    import?: number;
+  };
   missed: boolean;
-  range: string;
+  ranges: {
+    generation: string;
+    export: string;
+    import: string;
+  };
   tries: number;
   fieldFind: string;
   warning: string;
@@ -30,10 +44,17 @@ interface SearchDialogProps {
   onOpenChange: (open: boolean) => void;
   meters: MeterReading[];
   onSelect: (meter: MeterReading) => void;
+  onAddNew: (meterData: { meterNumber: string; customerName: string; address: string }) => void;
 }
 
-export function SearchDialog({ open, onOpenChange, meters, onSelect }: SearchDialogProps) {
+export function SearchDialog({ open, onOpenChange, meters, onSelect, onAddNew }: SearchDialogProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newMeter, setNewMeter] = useState({
+    meterNumber: "",
+    customerName: "",
+    address: ""
+  });
 
   const filteredMeters = meters.filter(
     (meter) =>
@@ -46,6 +67,17 @@ export function SearchDialog({ open, onOpenChange, meters, onSelect }: SearchDia
     onSelect(meter);
     onOpenChange(false);
     setSearchTerm("");
+    setShowAddForm(false);
+  };
+
+  const handleAddNewMeter = () => {
+    if (newMeter.meterNumber && newMeter.customerName && newMeter.address) {
+      onAddNew(newMeter);
+      onOpenChange(false);
+      setSearchTerm("");
+      setNewMeter({ meterNumber: "", customerName: "", address: "" });
+      setShowAddForm(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -63,56 +95,117 @@ export function SearchDialog({ open, onOpenChange, meters, onSelect }: SearchDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Search Meters</DialogTitle>
+          <DialogTitle>{showAddForm ? "Add New Meter" : "Search Meters"}</DialogTitle>
         </DialogHeader>
 
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name or sequence..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-            autoFocus
-          />
-        </div>
-
-        <div className="flex-1 overflow-y-auto space-y-2 pr-2">
-          {filteredMeters.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p className="text-sm">No meters found</p>
+        {showAddForm ? (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="meterNumber">Meter Number</Label>
+              <Input
+                id="meterNumber"
+                placeholder="MTR-XXX-XXXX"
+                value={newMeter.meterNumber}
+                onChange={(e) => setNewMeter(prev => ({ ...prev, meterNumber: e.target.value }))}
+                autoFocus
+              />
             </div>
-          ) : (
-            filteredMeters.map((meter) => (
-              <button
-                key={meter.id}
-                onClick={() => handleSelect(meter)}
-                className="w-full text-left p-3 rounded-lg border border-border hover:border-primary hover:bg-accent/5 transition-colors"
+            <div>
+              <Label htmlFor="customerName">Customer Name</Label>
+              <Input
+                id="customerName"
+                placeholder="Enter customer name"
+                value={newMeter.customerName}
+                onChange={(e) => setNewMeter(prev => ({ ...prev, customerName: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="address">Address</Label>
+              <Input
+                id="address"
+                placeholder="Enter address"
+                value={newMeter.address}
+                onChange={(e) => setNewMeter(prev => ({ ...prev, address: e.target.value }))}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleAddNewMeter}
+                disabled={!newMeter.meterNumber || !newMeter.customerName || !newMeter.address}
+                className="flex-1"
               >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Hash className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs font-medium text-muted-foreground">
-                      Seq {meter.sequence}
-                    </span>
-                  </div>
-                  <Badge variant="outline" className={`text-xs ${getStatusColor(meter.status)}`}>
-                    {meter.status}
-                  </Badge>
-                </div>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Meter
+              </Button>
+              <Button 
+                onClick={() => setShowAddForm(false)}
+                variant="outline"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-2 mb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or sequence..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                  autoFocus
+                />
+              </div>
+              <Button 
+                onClick={() => setShowAddForm(true)}
+                variant="outline"
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add New Meter
+              </Button>
+            </div>
 
-                <h4 className="font-semibold text-foreground text-sm mb-1">
-                  {meter.meterNumber}
-                </h4>
-
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <User className="h-3 w-3" />
-                  <span>{meter.customerName}</span>
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+              {filteredMeters.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">No meters found</p>
                 </div>
-              </button>
-            ))
-          )}
-        </div>
+              ) : (
+                filteredMeters.map((meter) => (
+                  <button
+                    key={meter.id}
+                    onClick={() => handleSelect(meter)}
+                    className="w-full text-left p-3 rounded-lg border border-border hover:border-primary hover:bg-accent/5 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground">
+                          Seq {meter.sequence}
+                        </span>
+                      </div>
+                      <Badge variant="outline" className={`text-xs ${getStatusColor(meter.status)}`}>
+                        {meter.status}
+                      </Badge>
+                    </div>
+
+                    <h4 className="font-semibold text-foreground text-sm mb-1">
+                      {meter.meterNumber}
+                    </h4>
+
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <User className="h-3 w-3" />
+                      <span>{meter.customerName}</span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
