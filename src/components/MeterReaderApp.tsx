@@ -149,11 +149,6 @@ export function MeterReaderApp() {
       };
       setMeters(updatedMeters);
       setReadingValue("");
-      
-      // Auto-advance to next meter
-      if (currentIndex < meters.length - 1) {
-        setTimeout(() => handleNext(), 500);
-      }
     }
   };
 
@@ -284,20 +279,20 @@ export function MeterReaderApp() {
                 ) : (
                   <div className="flex gap-2">
                     <Button
-                      onClick={handleSubmitReading}
-                      className="flex-1"
-                      disabled={!readingValue}
-                    >
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Submit Reading
-                    </Button>
-                    <Button
                       variant="destructive"
                       onClick={() => setIssueReportOpen(true)}
                       className="flex-1"
                     >
                       <AlertTriangle className="h-4 w-4 mr-2" />
                       Mark Issue
+                    </Button>
+                    <Button
+                      onClick={handleSubmitReading}
+                      className="flex-1"
+                      disabled={!readingValue}
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Submit Reading
                     </Button>
                   </div>
                 )}
