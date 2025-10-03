@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,11 +14,14 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  Upload
+  Upload,
+  Download,
+  LogOut
 } from "lucide-react";
 import { SearchDialog } from "./SearchDialog";
 import { MeterCard } from "./MeterCard";
 import { IssueReportDialog } from "./IssueReportDialog";
+import { ImportDialog } from "./ImportDialog";
 import decorpLogo from "@/assets/decorp-logo.jpg";
 
 interface MeterReading {
@@ -160,10 +164,12 @@ interface AuditLogEntry {
 }
 
 export function MeterReaderApp() {
+  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [meters, setMeters] = useState<MeterReading[]>(mockMeters);
   const [searchOpen, setSearchOpen] = useState(false);
   const [issueReportOpen, setIssueReportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [readingValues, setReadingValues] = useState({
     generation: "",
     export: "",
@@ -424,6 +430,39 @@ export function MeterReaderApp() {
     // Keep dialog open so user can add more issues if needed
   };
 
+  const handleImportMeters = (importedMeters: any[]) => {
+    const formattedMeters: MeterReading[] = importedMeters.map((m, idx) => ({
+      id: m.id || `${Date.now()}-${idx}`,
+      sequence: m.sequence || idx + 1,
+      meterNumber: m.meterNumber,
+      customerName: m.customerName,
+      address: m.address,
+      lastReadings: m.lastReadings || { generation: 0, export: 0, import: 0 },
+      currentReadings: m.currentReadings,
+      missed: m.missed || false,
+      ranges: m.ranges || { generation: "0-100000", export: "0-100000", import: "0-100000" },
+      tries: m.tries || 0,
+      fieldFind: m.fieldFind || "",
+      warning: m.warning || "",
+      status: m.status || "pending",
+      foundConnected: m.foundConnected,
+      remarks: m.remarks,
+      lat: m.lat,
+      lng: m.lng,
+      issues: m.issues || [],
+    }));
+    
+    setMeters(formattedMeters);
+    setCurrentIndex(0);
+    setReadingValues({ generation: "", export: "", import: "" });
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("username");
+    navigate("/login");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -434,15 +473,34 @@ export function MeterReaderApp() {
               <img src={decorpLogo} alt="DECORP Logo" className="h-8 w-8 rounded-full object-cover" />
               <h1 className="text-lg font-bold text-foreground">Meter Reader</h1>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSearchOpen(true)}
-              className="gap-2"
-            >
-              <Search className="h-4 w-4" />
-              Search
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setImportOpen(true)}
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Import
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSearchOpen(true)}
+                className="gap-2"
+              >
+                <Search className="h-4 w-4" />
+                Search
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Progress Bar */}
@@ -748,6 +806,13 @@ export function MeterReaderApp() {
         open={issueReportOpen}
         onOpenChange={setIssueReportOpen}
         onSubmit={handleMarkIssue}
+      />
+
+      {/* Import Dialog */}
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImport={handleImportMeters}
       />
     </div>
   );
