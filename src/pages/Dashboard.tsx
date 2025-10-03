@@ -100,6 +100,11 @@ export default function Dashboard() {
                   <p className="font-medium">{new Date().toLocaleDateString()}</p>
                 </div>
               </div>
+              <Alert className="mt-4">
+                <AlertDescription className="text-sm">
+                  If the displayed route and group is incorrect, please contact your supervisor immediately before proceeding.
+                </AlertDescription>
+              </Alert>
             </CardContent>
           </Card>
 
@@ -108,10 +113,10 @@ export default function Dashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Download className="h-5 w-5" />
-                Download Reading Group
+                Download DN File
               </CardTitle>
               <CardDescription>
-                Load today's assigned meters to begin processing readings
+                Load your assigned customer accounts to begin meter readings
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -122,21 +127,20 @@ export default function Dashboard() {
                   size="lg"
                 >
                   <Download className="h-5 w-5" />
-                  Import Meter List (JSON)
+                  Download DN File
                 </Button>
                 
                 <p className="text-xs text-muted-foreground text-center">
-                  You can import meter readings from a JSON file provided by your dispatcher
+                  Select the DN file provided by your dispatcher
                 </p>
               </div>
 
               <div className="pt-4 border-t">
-                <h4 className="font-medium mb-2 text-sm">Instructions:</h4>
-                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                  <li>Receive your daily reading group file from your supervisor</li>
-                  <li>Click "Import Meter List" and select the JSON file</li>
-                  <li>Verify the loaded meters and begin processing</li>
-                  <li>Upload completed readings at the end of your route</li>
+                <h4 className="font-medium mb-3 text-sm">Instructions:</h4>
+                <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+                  <li>Download the DN file from your supervisor or dispatcher</li>
+                  <li>Read the meter for each customer account assigned to you</li>
+                  <li>Upload your completed readings when all assigned accounts are done</li>
                 </ol>
               </div>
             </CardContent>
