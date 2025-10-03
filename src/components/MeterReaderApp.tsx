@@ -16,13 +16,10 @@ import {
   CheckCircle2,
   Clock,
   Upload,
-  Download,
-  LogOut
 } from "lucide-react";
 import { SearchDialog } from "./SearchDialog";
 import { MeterCard } from "./MeterCard";
 import { IssueReportDialog } from "./IssueReportDialog";
-import { ImportDialog } from "./ImportDialog";
 import decorpLogo from "@/assets/decorp-logo.jpg";
 
 interface MeterReading {
@@ -167,10 +164,40 @@ interface AuditLogEntry {
 export function MeterReaderApp() {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [meters, setMeters] = useState<MeterReading[]>(mockMeters);
+  const [meters, setMeters] = useState<MeterReading[]>(() => {
+    // Try to load from sessionStorage first
+    const stored = sessionStorage.getItem("meterReadings");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        return parsed.map((m: any, idx: number) => ({
+          id: m.id || `${Date.now()}-${idx}`,
+          sequence: m.sequence || idx + 1,
+          meterNumber: m.meterNumber,
+          customerName: m.customerName,
+          address: m.address,
+          lastReadings: m.lastReadings || { generation: 0, export: 0, import: 0 },
+          currentReadings: m.currentReadings,
+          missed: m.missed || false,
+          ranges: m.ranges || { generation: "0-100000", export: "0-100000", import: "0-100000" },
+          tries: m.tries || 0,
+          fieldFind: m.fieldFind || "",
+          warning: m.warning || "",
+          status: m.status || "pending",
+          foundConnected: m.foundConnected,
+          remarks: m.remarks,
+          lat: m.lat,
+          lng: m.lng,
+          issues: m.issues || [],
+        }));
+      } catch (e) {
+        console.error("Failed to load meters from storage", e);
+      }
+    }
+    return mockMeters;
+  });
   const [searchOpen, setSearchOpen] = useState(false);
   const [issueReportOpen, setIssueReportOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
   const [readingValues, setReadingValues] = useState({
     generation: "",
     export: "",
@@ -431,31 +458,8 @@ export function MeterReaderApp() {
     // Keep dialog open so user can add more issues if needed
   };
 
-  const handleImportMeters = (importedMeters: any[]) => {
-    const formattedMeters: MeterReading[] = importedMeters.map((m, idx) => ({
-      id: m.id || `${Date.now()}-${idx}`,
-      sequence: m.sequence || idx + 1,
-      meterNumber: m.meterNumber,
-      customerName: m.customerName,
-      address: m.address,
-      lastReadings: m.lastReadings || { generation: 0, export: 0, import: 0 },
-      currentReadings: m.currentReadings,
-      missed: m.missed || false,
-      ranges: m.ranges || { generation: "0-100000", export: "0-100000", import: "0-100000" },
-      tries: m.tries || 0,
-      fieldFind: m.fieldFind || "",
-      warning: m.warning || "",
-      status: m.status || "pending",
-      foundConnected: m.foundConnected,
-      remarks: m.remarks,
-      lat: m.lat,
-      lng: m.lng,
-      issues: m.issues || [],
-    }));
-    
-    setMeters(formattedMeters);
-    setCurrentIndex(0);
-    setReadingValues({ generation: "", export: "", import: "" });
+  const handleBackToDashboard = () => {
+    navigate("/");
   };
 
   const handleLogout = async () => {
@@ -467,21 +471,27 @@ export function MeterReaderApp() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
-        <div className="px-4 py-3">
+        <div className="container mx-auto px-4 py-4">
+          {/* Top Row */}
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <img src={decorpLogo} alt="DECORP Logo" className="h-8 w-8 rounded-full object-cover" />
-              <h1 className="text-lg font-bold text-foreground">Meter Reader</h1>
+            <div className="flex items-center gap-3">
+              <img 
+                src={decorpLogo} 
+                alt="DECORP Logo" 
+                className="h-10 w-10 rounded-full object-cover" 
+              />
+              <div>
+                <h1 className="text-lg font-bold text-foreground">Meter Reader</h1>
+                <p className="text-xs text-muted-foreground">{readerInfo.name} • {readerInfo.route}</p>
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                onClick={() => setImportOpen(true)}
-                className="gap-2"
+                onClick={handleBackToDashboard}
               >
-                <Download className="h-4 w-4" />
-                Import
+                Back to Dashboard
               </Button>
               <Button
                 variant="outline"
@@ -490,84 +500,28 @@ export function MeterReaderApp() {
                 className="gap-2"
               >
                 <Search className="h-4 w-4" />
-                Search
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="gap-2"
-              >
-                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Search</span>
               </Button>
             </div>
           </div>
 
-          {/* Progress Bar */}
-          <div className="mb-3">
-            <div className="flex items-center justify-between gap-2 mb-1.5">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-foreground">
-                    Progress: {totalProcessed} / {meters.length} meters
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {Math.round((totalProcessed / meters.length) * 100)}%
-                  </span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary transition-all duration-300"
-                    style={{ width: `${(totalProcessed / meters.length) * 100}%` }}
-                  />
-                </div>
-              </div>
-              <Button
-                size="sm"
-                onClick={handleUpload}
-                disabled={!allProcessed}
-                className="gap-2 bg-success hover:bg-success/90 text-white shrink-0"
-              >
-                <Upload className="h-4 w-4" />
-                Upload
-              </Button>
+          {/* Progress Stats Row */}
+          <div className="grid grid-cols-4 gap-2 sm:gap-3">
+            <div className="text-center p-2 bg-muted/50 rounded-md">
+              <div className="text-lg sm:text-xl font-bold text-foreground">{currentIndex + 1}/{meters.length}</div>
+              <div className="text-xs text-muted-foreground">Current</div>
             </div>
-          </div>
-
-          {/* Reader Info */}
-          <div className="bg-muted/30 rounded-lg p-2.5 mb-3 space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-foreground">{readerInfo.name}</span>
-              <span className="text-xs text-muted-foreground">
-                {currentTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-              </span>
+            <div className="text-center p-2 bg-green-500/10 rounded-md">
+              <div className="text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">{completedCount}</div>
+              <div className="text-xs text-muted-foreground">Complete</div>
             </div>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span>{readerInfo.franchiseArea}</span>
-              <span>•</span>
-              <span>{readerInfo.route}</span>
-              <span>•</span>
-              <span>{readerInfo.group}</span>
+            <div className="text-center p-2 bg-yellow-500/10 rounded-md">
+              <div className="text-lg sm:text-xl font-bold text-yellow-600 dark:text-yellow-400">{issueCount}</div>
+              <div className="text-xs text-muted-foreground">Issues</div>
             </div>
-          </div>
-          
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex gap-2">
-              <Badge variant="outline" className="gap-1.5 bg-status-complete/10 text-status-complete border-status-complete/20">
-                <CheckCircle2 className="h-3 w-3" />
-                {completedCount}
-              </Badge>
-              <Badge variant="outline" className="gap-1.5 bg-status-issue/10 text-status-issue border-status-issue/20">
-                <AlertTriangle className="h-3 w-3" />
-                {issueCount}
-              </Badge>
-              <Badge variant="outline" className="gap-1.5 bg-status-pending/10 text-status-pending border-status-pending/20">
-                <Clock className="h-3 w-3" />
-                {pendingCount}
-              </Badge>
-            </div>
-            <div className="text-sm font-medium text-muted-foreground">
-              {currentIndex + 1} / {meters.length}
+            <div className="text-center p-2 bg-blue-500/10 rounded-md">
+              <div className="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400">{pendingCount}</div>
+              <div className="text-xs text-muted-foreground">Pending</div>
             </div>
           </div>
         </div>
@@ -808,12 +762,6 @@ export function MeterReaderApp() {
         onSubmit={handleMarkIssue}
       />
 
-      {/* Import Dialog */}
-      <ImportDialog
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        onImport={handleImportMeters}
-      />
     </div>
   );
 }
