@@ -108,43 +108,6 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Download Reading Group */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Download className="h-5 w-5" />
-                Download DN File
-              </CardTitle>
-              <CardDescription>
-                Load your assigned customer accounts to begin meter readings
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <Button
-                  onClick={() => setImportOpen(true)}
-                  className="w-full gap-2"
-                  size="lg"
-                >
-                  <Download className="h-5 w-5" />
-                  Download DN File
-                </Button>
-                
-                <p className="text-xs text-muted-foreground text-center">
-                  Select the DN file provided by your dispatcher
-                </p>
-              </div>
-
-              <div className="pt-4 border-t">
-                <h4 className="font-medium mb-3 text-sm">Instructions:</h4>
-                <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                  <li>Download the DN file from your supervisor or dispatcher</li>
-                  <li>Read the meter for each customer account assigned to you</li>
-                  <li>Upload your completed readings when all assigned accounts are done</li>
-                </ol>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </main>
 
